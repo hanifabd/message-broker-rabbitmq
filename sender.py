@@ -1,6 +1,5 @@
 import pika
 import json
-import time
 
 
 connection_param = pika.ConnectionParameters('localhost')
@@ -16,9 +15,6 @@ try:
     
     for i in range(10):
         corr_id = str(i)
-        if corr_id == "9":
-            start = time.time()
-
         body = json.dumps({
             "id": i,
             "num1": i*2,
@@ -35,14 +31,12 @@ try:
 except pika.exceptions.ConnectionClosed as exc:
     print('Error. Connection closed, and the message was never delivered.')
 
-# Receive Response for Specific Id (User)
+# Receive Response for Specific Id Request (User)
 corr_id = str(5)
 def on_response(ch, method, props, body):
     if corr_id == props.correlation_id:
-        end = time.time()
-        print(end-start)
         response = body
-        print(response)
+        print(f'Result for Id {corr_id} Operation: {response}')
         channel.stop_consuming()
 
 channel.basic_consume(

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import pika
-import time
 import ast
 import json
 
@@ -17,7 +16,6 @@ def math_operation(num1, num2):
 
 def callback(ch, method, props, body):
     print(f'[x] Request Received {body}')
-    print(method.delivery_tag)
     
     dict_string = body.decode('utf-8')
     data = ast.literal_eval(dict_string)
