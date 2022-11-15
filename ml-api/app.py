@@ -2,8 +2,8 @@ from flask import Flask, Response
 from celery import Celery
 from celery.result import AsyncResult
 from sum_tasks import add, sum_app
-
 import json
+
 
 app = Flask(__name__)
 celery_app = Celery(
@@ -11,7 +11,6 @@ celery_app = Celery(
     broker='amqp://guest:guest@localhost:5672', 
     backend='rpc://'
 )
-
 
 @app.route('/')
 def main():
@@ -30,7 +29,8 @@ def sum():
     response = Response(
         json.dumps({
             "id": req_sum.id, 
-            "status": req_sum.state
+            "status": req_sum.state,
+            "result": req_sum.get()
         }),
         status=200,
         mimetype='application/json'
@@ -40,12 +40,20 @@ def sum():
 @app.route('/sum_result/<task_id>')
 def task_result(task_id):
     result = AsyncResult(task_id, app=sum_app)
-    response = Response(
-        json.dumps({
+    if result.state != "SUCCESS":
+        body = json.dumps({
             "id": result.id, 
             "status": result.state,
-            # "result": result.get()
-        }),
+        })
+    else:
+        body = json.dumps({
+            "id": result.id, 
+            "status": result.state,
+            "result": result.get()
+        })
+    
+    response = Response(
+        body,
         status=200,
         mimetype='application/json'
     )

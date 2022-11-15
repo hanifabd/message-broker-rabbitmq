@@ -1,0 +1,1 @@
+Celery not supported in Windows since version 4.x 
