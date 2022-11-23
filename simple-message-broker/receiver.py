@@ -4,10 +4,6 @@ import ast
 import json
 
 
-connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-channel = connection.channel()
-channel.queue_declare(queue='sum_events')
-
 def math_operation(num1, num2):
     result = 0
     for i in range(10000000):
@@ -36,8 +32,26 @@ def callback(ch, method, props, body):
         })
     )
 
-channel.basic_qos(prefetch_count=1)
-channel.basic_consume(queue='sum_events', on_message_callback=callback, auto_ack=True)
-
-print('[*] Waiting for messages. To exit press CTRL+C')
-channel.start_consuming()
+while(True):
+    try:
+        connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+        channel = connection.channel()
+        channel.queue_declare(queue='sum_events')
+        try:
+            channel.basic_qos(prefetch_count=1)
+            channel.basic_consume(queue='sum_events', on_message_callback=callback, auto_ack=True)
+            print('[*] Waiting for messages. To exit press CTRL+C')
+            channel.start_consuming()
+        except KeyboardInterrupt:
+            channel.stop_consuming()
+            connection.close()
+            break
+    except pika.exceptions.ConnectionClosedByBroker:
+        print("Connection was closed, retrying...")
+        continue
+    except pika.exceptions.AMQPConnectionError:
+        print("Connection was closed, retrying...")
+        continue
+    except pika.exceptions.AMQPChannelError as err:
+        print("Caught a channel error: {}, stopping...".format(err))
+        break

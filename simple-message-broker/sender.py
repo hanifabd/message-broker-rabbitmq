@@ -30,6 +30,10 @@ try:
 
 except pika.exceptions.ConnectionClosed as exc:
     print('Error. Connection closed, and the message was never delivered.')
+except pika.exceptions.ConnectionClosedByBroker:
+    print('Error. Connection closed, and the message was never delivered.')
+except pika.exceptions.AMQPConnectionError:
+    print('Error. Connection closed, and the message was never delivered.')
 
 # Receive Response for Specific Id Request (User)
 corr_id = str(5)
